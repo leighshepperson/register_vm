@@ -3,7 +3,9 @@ const NUMBER_OF_INSTRUCTIONS: usize = 4;
 #[derive(Debug)]
 enum InstructionSet {
     Halt,
-    Load
+    Load {reg: i16, value: i16 },
+    Mov {reg1: i16, reg2: i16},
+    Add {reg1: i16, reg2: i16, reg3: i16}
 }
 
 fn main() {
@@ -11,11 +13,11 @@ fn main() {
     let mut reg_field = [0; 2];
     let mut running = true;
 
-    let instructions = [0x1410, 0xF0, 0xFFF, 0x0];
+    let instructions = [0x3410, 0xF0, 0xFFF, 0x0];
 
     while running {
 
-      let instruction = fetch(&mut ic, instructions);
+      let instruction = fetch(ic, instructions);
 
       let decoded_instruction = decode(instruction);
 
@@ -26,24 +28,22 @@ fn main() {
 
 }
 
-fn fetch(ic: &mut usize, instructions: [i16; NUMBER_OF_INSTRUCTIONS]) -> i16 {
-    let instruction = instructions[*ic];
-    *ic += 1;
-    instruction
+fn fetch(ic: usize, instructions: [i16; NUMBER_OF_INSTRUCTIONS]) -> i16 {
+    instructions[ic]
 }
 
-fn decode(instruction: i16) -> InstructionSet {
+fn decode(instruction: i16) -> Option<InstructionSet> {
     let instruction_number = instruction >> 12;
-    let reg1 = (instruction << 4) >> 12;
-    let reg2 = (instruction << 8) >> 12;
-    let reg3 = (instruction << 12) >> 12;
-    let value = (instruction << 8) >> 8;
-
-    println!("{:?}",value );
+    let reg1 = (instruction >> 8) & 0xF;
+    let reg2 = (instruction >> 4) & 0xF;
+    let reg3 = instruction & 0xF;
+    let value = instruction & 0xFF;
 
     match instruction_number {
-        0 => InstructionSet::Halt,
-        1 => InstructionSet::Load,
-        _ => InstructionSet::Load
+        0 => Some(InstructionSet::Halt),
+        1 => Some(InstructionSet::Load {reg: reg1 , value: value}),
+        2 => Some(InstructionSet::Mov {reg1: reg1 , reg2: reg2}),
+        3 => Some(InstructionSet::Add {reg1: reg1, reg2: reg2, reg3: reg3}),
+        _ => None
     }
 }
