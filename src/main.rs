@@ -1,32 +1,49 @@
-#[derive(Copy, Clone)]
-struct Register<T> {
-    value: T
-}
+const NUMBER_OF_INSTRUCTIONS: usize = 4;
 
-impl<T> Register<T> {
-    fn write(&mut self, value: T) {self.value = value; }
-    fn read(self) -> T { self.value }
+#[derive(Debug)]
+enum InstructionSet {
+    Halt,
+    Load
 }
 
 fn main() {
-    let mut instruction_counter: Register<usize> = Register { value: 0 };
-    let mut registers: [Register<i16>; 2] = [Register { value: 0 }; 2];
+    let mut ic = 0;
+    let mut reg_field = [0; 2];
     let mut running = true;
 
-    let stored_instructions = &[0xAF4, 33, 13];
+    let instructions = [0x1410, 0xF0, 0xFFF, 0x0];
 
     while running {
-        println!("{:?}", instruction_counter.read() );
-        instruction_counter.write(1);
-        let instruction = fetch(stored_instructions, &mut instruction_counter);
-        println!("{:?}", instruction);
 
-        running = false;
-    }
+      let instruction = fetch(&mut ic, instructions);
+
+      let decoded_instruction = decode(instruction);
+
+      running = false;
+
+      println!("{:?}", decoded_instruction);
+    };
+
 }
 
-fn fetch(stored_instructions: &[i32], instruction_counter: &mut Register<usize>) -> i32 {
-    let old = instruction_counter.read();
-    instruction_counter.write(old + 1);
-    stored_instructions[old]
+fn fetch(ic: &mut usize, instructions: [i16; NUMBER_OF_INSTRUCTIONS]) -> i16 {
+    let instruction = instructions[*ic];
+    *ic += 1;
+    instruction
+}
+
+fn decode(instruction: i16) -> InstructionSet {
+    let instruction_number = instruction >> 12;
+    let reg1 = (instruction << 4) >> 12;
+    let reg2 = (instruction << 8) >> 12;
+    let reg3 = (instruction << 12) >> 12;
+    let value = (instruction << 8) >> 8;
+
+    println!("{:?}",value );
+
+    match instruction_number {
+        0 => InstructionSet::Halt,
+        1 => InstructionSet::Load,
+        _ => InstructionSet::Load
+    }
 }
