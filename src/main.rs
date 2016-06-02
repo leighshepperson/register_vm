@@ -16,7 +16,7 @@ impl Instruction {
         let reg2 = ((encoded_instruction >> 4) & 0xF) as usize;
         let reg3 = (encoded_instruction & 0xF) as usize;
         let offset = (encoded_instruction & 0xFFF) as usize;
-        let value = encoded_instruction & 0xFFF;
+        let value = encoded_instruction & 0xFF;
 
         match operator {
             0 => Ok(Instruction::Halt),
